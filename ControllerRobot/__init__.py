@@ -8,6 +8,5 @@ app = Flask(__name__)
 app.config.from_object('ControllerRobot.settings')
 
 import ControllerRobot.core
-import ControllerRobot.models
-import ControllerRobot.controllers
+
 
