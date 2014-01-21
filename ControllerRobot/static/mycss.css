@@ -1,0 +1,53 @@
+#containingDiv {
+    overflow: hidden;
+}
+
+#myCanvas {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    overflow: hidden
+}
+
+html, body {
+    height: 100%; /* to keep .footer on bottom */
+    margin: 0; /* to get rid of scroll bar, because (100% + default margin = scroll) */
+
+}
+
+.wrapper {
+    min-height: 100%; /* to keep .footer on bottom */
+    position: relative; /* must be relative or .footer will cover content */
+}
+
+.page {
+    padding-bottom: 2.2em; /* MUST have padding on the bottom => .footer, or .footer will cover content */
+
+}
+
+.footerleft {
+    position: absolute; /* to keep .footer on bottom */
+    bottom: 0px; /* to keep .footer on bottom */
+    height: 2em; /* height must be smaller then .page's bottom padding */
+    left: 5px;
+}
+
+.footerright {
+    position: absolute; /* to keep .footer on bottom */
+    bottom: 0px; /* to keep .footer on bottom */
+    height: 2em; /* height must be smaller then .page's bottom padding */
+    right: 5px;
+}
+
+.headertop {
+    position: relative;
+    top: 0px;
+    text-align: center;
+}
+
+.ui-dialog-osx {
+    -moz-border-radius: 0 0 8px 8px;
+    -webkit-border-radius: 0 0 8px 8px;
+    border-radius: 0 0 8px 8px;
+    border-width: 0 8px 8px 8px;
+}

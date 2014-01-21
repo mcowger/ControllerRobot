@@ -1,12 +1,31 @@
-{% extends "base.html" %}
+{% extends "standard.html" %}
+
+
 {% block content %}
-<div class="header-section">
-	<div class="row header-row">
-		<div class="span12 masthead">
-			<h1 class="heading">Welcome Home.</h1>
-		</div>
-	</div>
-</div>
-<div class="header-push">
-</div>
+
+    <script src="{{ url_for('static', filename='phantomlimb.js') }}"></script>
+    <canvas id="myCanvas"></canvas>
+    <script src="{{ url_for('static', filename='drawcanvas.js') }}"></script>
+    <script src="{{ url_for('static', filename='detectmobile.js') }}"></script>
+
+    <div class="headertop">
+        Drag Finger to Drive Bot
+    </div>
+
+    <div class="footerleft" id="left">
+        L (power):
+        <div id="lValue">0</div>
+    </div>
+    <div class="footerright" id="right">
+        R (power):
+        <div id="rValue">0</div>
+    </div>
+    <script>
+        if (!isMobile.any) {
+            window.phantomLimb.start();
+        }
+    </script>
+
+
+
 {% endblock %}
