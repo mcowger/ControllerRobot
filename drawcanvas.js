@@ -47,28 +47,52 @@ drawCircle($('#myCanvas').width() / 2, $('#myCanvas').height() / 2);
 var totalX = $('#myCanvas').width();
 var totalY = $('#myCanvas').height();
 
+leftWheel = 0;
+rightWheel = 0;
+
 var previousLeft = -1000;
 var previousRight = -1000;
 
-targetURL = "http://192.168.0.99:5000/drive"
 
+function httpGet() {
+//    L = pad(L, 3);
+//    R = pad(R, 3);
 
-function httpGet(L, R) {
-    var thejson = {"L": L, "R": R};
+    L = leftWheel;
+    R = rightWheel;
+
+    var seconds = new Date().getTime() / 1000;
+    baseURL = "https://api.spark.io/v1/devices/" + window.deviceid + "/setMotors"
+    var toSend = 'access_token=' + window.accesstoken + '&params=' + L + ',' + R
     if (window.enablesend) {
-        var xmlHttp = null;
-        xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("POST", targetURL, false);
-        xmlHttp.setRequestHeader("Content-type", "application/json");
-        xmlHttp.send(JSON.stringify(thejson));
+
+        console.log(seconds + " Sending:");
+        console.log(baseURL + " | POST | " + toSend);
+
+        var xmlHttp = new XMLHttpRequest();
+
+        xmlHttp.open("POST", baseURL, true);
+        xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xmlHttp.timeout = 5000; //5 second timeout
+        xmlHttp.onreadystatechange = function () {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                console.log(xmlHttp.responseText);
+            }
+        }
+        xmlHttp.send(toSend);
+
+
     }
     else {
-        console.log("API Send Disabled, would have sent:");
-        console.log(JSON.stringify(thejson));
+        console.log(seconds + " API Send Disabled, would have sent:");
+        console.log(baseURL + " | POST | " + toSend);
 
     }
     return 0;
 }
+
+
+var throttledGet = $.throttle(1000, httpGet);  //dont call more than 1x/sec
 
 
 function badRound(value) {
@@ -119,8 +143,8 @@ function handleMove(e) {
 
     percentForward = calcMotorMagnitude(curY, totalY);
 
-    var leftWheel = percentForward
-    var rightWheel = percentForward
+    leftWheel = percentForward
+    rightWheel = percentForward
 
     adjustment = calcMotorMagnitude(curX, totalX);
 
@@ -160,7 +184,7 @@ function handleMove(e) {
         previousRight = rightWheel;
 
         //console.log("L: " + leftWheel + " R: " + rightWheel);
-        httpGet(leftWheel, rightWheel);
+        throttledGet();
 
         //update the HTML to see the current values
         $('#lValue').text(leftWheel);

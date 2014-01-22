@@ -9,14 +9,23 @@
     <link href="mycss.css" rel="stylesheet" type="text/css"/>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script src="https://raw.github.com/caleb531/jcanvas/master/jcanvas.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
+    <script src="jcanvas.min.js"></script>
+    <script src="vex.combined.min.js"></script>
+    <script src="jquery.cookie.js"></script>
+    <script>vex.defaultOptions.className = 'vex-theme-os';</script>
+    <link rel="stylesheet" href="vex.css"/>
+    <link rel="stylesheet" href="vex-theme-os.css"/>
+
     <script>window.enablesend = false</script>
 
 </head>
 <body>
 
 <script src="phantomlimb.js"></script>
+
 <canvas id="myCanvas"></canvas>
+
 <script src="drawcanvas.js"></script>
 <script src="detectmobile.js"></script>
 
@@ -28,6 +37,49 @@
 </div>
 
 <script>
+
+    window.accesstoken = $.cookie('accesstoken') || "accesstoken";
+    window.deviceid = $.cookie('deviceid') || "deviceid";
+
+    if ($.cookie('accesstoken')) {
+        accesstoput = "value=\"" + window.accesstoken + "\"";
+    }
+    else {
+        accesstoput = "placeholder=\"Access Token\"";
+    }
+    if ($.cookie('deviceid')) {
+        devicetoput = "value=\"" + window.deviceid + "\"";
+    }
+    else {
+        devicetoput = "placeholder=\"Device ID\"";
+    }
+
+    vex.dialog.open({
+        message: 'Enter your accesstoken and deviceid:',
+        input: "<input name=\"accesstoken\" type=\"text\" " + accesstoput + " required />\n<input name=\"deviceid\" type=\"text\" " + devicetoput + " required />",
+        buttons: [
+            $.extend({}, vex.dialog.buttons.YES, {
+                text: 'Submit'
+            })
+        ],
+        callback: function (data) {
+            if (data === false) {
+                return console.log('Cancelled');
+            }
+
+
+            window.accesstoken = data.accesstoken;
+            window.deviceid = data.deviceid;
+
+            $.cookie('accesstoken', window.accesstoken, { expires: 7, path: '/' });
+            $.cookie('deviceid', window.deviceid, { expires: 7, path: '/' });
+
+            (!isMobile.any) && window.phantomLimb.start();
+            console.log('accesstoken: ', data.accesstoken, 'deviceid: ', data.deviceid);
+        }
+    });
+
+
     $("#check").button();
 
     $('#check').click(function () {
@@ -35,8 +87,6 @@
         console.log("Driving Enabled?:" + window.enablesend);
     });
 
-
-    !isMobile.any && window.phantomLimb.start();
 
     $('.headertop').hover(
             function () {
@@ -48,6 +98,7 @@
                 !isMobile.any && window.phantomLimb.start();
             }
     );
+
 
 </script>
 
