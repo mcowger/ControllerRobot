@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta id="viewport" name="viewport"
+          content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet"
+          type="text/css"/>
+    <link href="mycss.css" rel="stylesheet" type="text/css"/>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="https://raw.github.com/caleb531/jcanvas/master/jcanvas.min.js"></script>
+    <script>window.enablesend = false</script>
+
+</head>
+<body>
+
+<script src="phantomlimb.js"></script>
+<canvas id="myCanvas"></canvas>
+<script src="drawcanvas.js"></script>
+<script src="detectmobile.js"></script>
+
+<div class="headertop" id="header">
+    Drag Finger to Drive Bot
+    <p></p>
+    <input type="checkbox" class="checkboxtop" id="check"><label for="check">Enable Driving</label>
+
+</div>
+
+<script>
+    $("#check").button();
+
+    $('#check').click(function () {
+        window.enablesend = !window.enablesend;
+        console.log("Driving Enabled?:" + window.enablesend);
+    });
+
+
+    !isMobile.any && window.phantomLimb.start();
+
+    $('.headertop').hover(
+            function () {
+                //When over the header, disable phantomlimb
+                !isMobile.any && window.phantomLimb.stop()
+            },
+            function () {
+                //When off the header, enable phantomlimb
+                !isMobile.any && window.phantomLimb.start();
+            }
+    );
+
+</script>
+
+
+<div class="footerleft" id="left">
+    L (power):
+    <div id="lValue">0</div>
+</div>
+<div class="footerright" id="right">
+    R (power):
+    <div id="rValue">0</div>
+</div>
+
+
+</body>
+</html>

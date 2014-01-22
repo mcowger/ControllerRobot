@@ -2,13 +2,6 @@
  * Created by mcowger on 1/20/14.
  */
 
-function resizeCanvas() {
-    var canvas = document.getElementById('myCanvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas, false);
-resizeCanvas();
 
 function drawCenter() {
 
@@ -19,9 +12,19 @@ function drawCenter() {
         strokeWidth: 5,
         fillStyle: 'green',
         x: $('#myCanvas').width() / 2, y: $('#myCanvas').height() / 2,
-        radius: $('#myCanvas').height() * .08
+        radius: $('#myCanvas').height() * .04
     });
 }
+
+function resizeCanvas() {
+    var canvas = document.getElementById('myCanvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight - $('#header').height();
+    drawCenter();
+    drawCircle($('#myCanvas').width() / 2, $('#myCanvas').height() / 2);
+}
+window.addEventListener('resize', resizeCanvas, false);
+resizeCanvas();
 
 
 function drawCircle(x, y) {
@@ -33,7 +36,7 @@ function drawCircle(x, y) {
             strokeWidth: 5,
             fillStyle: 'red',
             x: x, y: y,
-            radius: $('#myCanvas').height() * .04,
+            radius: $('#myCanvas').height() * .02,
         }
     );
 }
@@ -41,8 +44,8 @@ function drawCircle(x, y) {
 
 drawCircle($('#myCanvas').width() / 2, $('#myCanvas').height() / 2);
 
-var totalX = document.documentElement.clientWidth;
-var totalY = document.documentElement.clientHeight;
+var totalX = $('#myCanvas').width();
+var totalY = $('#myCanvas').height();
 
 var previousLeft = -1000;
 var previousRight = -1000;
@@ -50,14 +53,20 @@ var previousRight = -1000;
 targetURL = "http://192.168.0.99:5000/drive"
 
 
-function httpGet(X, Y) {
+function httpGet(L, R) {
+    var thejson = {"L": L, "R": R};
+    if (window.enablesend) {
+        var xmlHttp = null;
+        xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("POST", targetURL, false);
+        xmlHttp.setRequestHeader("Content-type", "application/json");
+        xmlHttp.send(JSON.stringify(thejson));
+    }
+    else {
+        console.log("API Send Disabled, would have sent:");
+        console.log(JSON.stringify(thejson));
 
-    var xmlHttp = null;
-    xmlHttp = new XMLHttpRequest();
-    var thejson = {"X": X, "Y": Y};
-    xmlHttp.open("POST", targetURL, false);
-    xmlHttp.setRequestHeader("Content-type", "application/json");
-    xmlHttp.send(JSON.stringify(thejson));
+    }
     return 0;
 }
 
@@ -101,7 +110,7 @@ function adjustWheel(cur, toAdd) {
 function handleMove(e) {
     e.preventDefault();
     var curX = e.touches[0].screenX;
-    var curY = e.touches[0].screenY;
+    var curY = e.touches[0].screenY - $('#header').height();
 
 
     //Redraw the circle every time the mouse moves
@@ -150,8 +159,8 @@ function handleMove(e) {
         previousLeft = leftWheel;
         previousRight = rightWheel;
 
-        console.log("L: " + leftWheel + " R: " + rightWheel);
-        //httpGet(leftWheel, rightWheel);
+        //console.log("L: " + leftWheel + " R: " + rightWheel);
+        httpGet(leftWheel, rightWheel);
 
         //update the HTML to see the current values
         $('#lValue').text(leftWheel);
