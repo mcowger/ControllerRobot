@@ -4,7 +4,7 @@
 
 #myCanvas {
     position: absolute;
-    top: 75px;
+    top: 0px;
     left: 0px;
     overflow: hidden
 }
@@ -26,30 +26,40 @@ html, body {
 }
 
 .footerleft {
-    position: absolute; /* to keep .footer on bottom */
-    top: 0px; /* to keep .footer on bottom */
-    height: 2em; /* height must be smaller then .page's bottom padding */
-    left: 5px;
+    position: relative;
+    text-align: left;
+    top: -50%;
+    font-family: 'Audiowide', cursive;
+    color: white;
+
 }
 
 .footerright {
-    position: absolute; /* to keep .footer on bottom */
-    top: 0px; /* to keep .footer on bottom */
-    height: 2em; /* height must be smaller then .page's bottom padding */
-    right: 5px;
+    position: relative; /* to keep .footer on bottom */
+    top: -100%;
+    text-align: right;
+    font-family: 'Audiowide', cursive;
+    color: white;
+
 }
 
 .headertop {
-    position: relative;
-    top: 5px;
+    position: absolute;
+    top: 0px;
     text-align: center;
+    background-color: black;
+    color: white;
+    height: 84px;
+    width: 100%;
+    padding-bottom: 1px;
 }
 
 .checkboxtop {
     position: relative;
-    top: 10px;
+    top: 25px;
     text-align: center;
     align: center;
+
 }
 
 .ui-dialog-osx {
@@ -57,4 +67,8 @@ html, body {
     -webkit-border-radius: 0 0 8px 8px;
     border-radius: 0 0 8px 8px;
     border-width: 0 8px 8px 8px;
+}
+
+.h1 {
+    font-family: 'Audiowide', cursive;
 }

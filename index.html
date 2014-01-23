@@ -6,23 +6,30 @@
           content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet"
           type="text/css"/>
+    <link href='http://fonts.googleapis.com/css?family=Audiowide' rel='stylesheet' type='text/css'>
     <link href="mycss.css" rel="stylesheet" type="text/css"/>
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
     <script src="jcanvas.min.js"></script>
     <script src="vex.combined.min.js"></script>
     <script src="jquery.cookie.js"></script>
+
     <script>vex.defaultOptions.className = 'vex-theme-os';</script>
     <link rel="stylesheet" href="vex.css"/>
     <link rel="stylesheet" href="vex-theme-os.css"/>
+    <script src="phantomlimb.js"></script>
+    <script src="shards.js"></script>
+    <script>
+        window.enablesend = false;
 
-    <script>window.enablesend = false</script>
+    </script>
+
 
 </head>
 <body>
 
-<script src="phantomlimb.js"></script>
 
 <canvas id="myCanvas"></canvas>
 
@@ -30,60 +37,87 @@
 <script src="detectmobile.js"></script>
 
 <div class="headertop" id="header">
-    Drag Finger to Drive Bot
-    <p></p>
-    <input type="checkbox" class="checkboxtop" id="check"><label for="check">Enable Driving</label>
+
+    <div id="titletext" class="h1">DragBot</div>
+    <br/>
+    <input type="checkbox" class="checkboxtop" id="check"><label for="check">LiveDrive!</label>
+
+    <div class="footerleft" id="left">L%
+        <div id="lValue">0</div>
+    </div>
+    <div class="footerright" id="right">R%
+        <div id="rValue">0</div>
+    </div>
+
 
 </div>
 
 <script>
 
+
+    $('#myCanvas').shards([0, 0, 0, .5], [255, 0, 0, .2], [255, 255, 0, .1], 8, 2, 2, .1, true);
     window.accesstoken = $.cookie('accesstoken') || "accesstoken";
     window.deviceid = $.cookie('deviceid') || "deviceid";
 
-    if ($.cookie('accesstoken')) {
-        accesstoput = "value=\"" + window.accesstoken + "\"";
-    }
-    else {
-        accesstoput = "placeholder=\"Access Token\"";
-    }
-    if ($.cookie('deviceid')) {
-        devicetoput = "value=\"" + window.deviceid + "\"";
-    }
-    else {
-        devicetoput = "placeholder=\"Device ID\"";
-    }
 
-    vex.dialog.open({
-        message: 'Enter your accesstoken and deviceid:',
-        input: "<input name=\"accesstoken\" type=\"text\" " + accesstoput + " required />\n<input name=\"deviceid\" type=\"text\" " + devicetoput + " required />",
-        buttons: [
-            $.extend({}, vex.dialog.buttons.YES, {
-                text: 'Submit'
-            })
-        ],
-        callback: function (data) {
-            if (data === false) {
-                return console.log('Cancelled');
+    function popup() {
+        vex.dialog.open({
+            message: 'Enter your accesstoken and deviceid:',
+            input: "<input name=\"accesstoken\" type=\"text\" " + accesstoput + " required />\n<input name=\"deviceid\" type=\"text\" " + devicetoput + " required />",
+            buttons: [
+                $.extend({}, vex.dialog.buttons.YES, {
+                    text: 'Submit'
+                })
+            ],
+            callback: function (data) {
+                if (data === false) {
+                    return console.log('Cancelled');
+                }
+
+
+                window.accesstoken = data.accesstoken;
+                window.deviceid = data.deviceid;
+
+                $.cookie('accesstoken', window.accesstoken, { expires: 7, path: '/' });
+                $.cookie('deviceid', window.deviceid, { expires: 7, path: '/' });
+
+                (!isMobile.any) && window.phantomLimb.start();
+                console.log('accesstoken: ', data.accesstoken, 'deviceid: ', data.deviceid);
             }
+        });
+    }
 
-
-            window.accesstoken = data.accesstoken;
-            window.deviceid = data.deviceid;
-
-            $.cookie('accesstoken', window.accesstoken, { expires: 7, path: '/' });
-            $.cookie('deviceid', window.deviceid, { expires: 7, path: '/' });
-
-            (!isMobile.any) && window.phantomLimb.start();
-            console.log('accesstoken: ', data.accesstoken, 'deviceid: ', data.deviceid);
+    if (window.accesstoken == "accesstoken" || window.deviceid == "deviceid") {
+        if ($.cookie('accesstoken')) {
+            accesstoput = "value=\"" + window.accesstoken + "\"";
         }
-    });
+        else {
+            accesstoput = "placeholder=\"Access Token\"";
+        }
+        if ($.cookie('deviceid')) {
+            devicetoput = "value=\"" + window.deviceid + "\"";
+        }
+        else {
+            devicetoput = "placeholder=\"Device ID\"";
+        }
 
+        popup()
+    }
+    else {
+        console.log("Access token and device ID found in cookies.  Using those.")
+    }
 
     $("#check").button();
 
     $('#check').click(function () {
         window.enablesend = !window.enablesend;
+        if (window.enablesend) {
+            $('#titletext').css('color', 'green');
+        }
+        else {
+            $('#titletext').css('color', 'red')
+        }
+
         console.log("Driving Enabled?:" + window.enablesend);
     });
 
@@ -103,14 +137,6 @@
 </script>
 
 
-<div class="footerleft" id="left">
-    L (power):
-    <div id="lValue">0</div>
-</div>
-<div class="footerright" id="right">
-    R (power):
-    <div id="rValue">0</div>
-</div>
 
 
 </body>

@@ -5,8 +5,6 @@
 
 function drawCenter() {
 
-    $('#myCanvas').clearCanvas();
-    //Draw the center circle
     $('#myCanvas').drawArc({
         strokeStyle: '#000',
         strokeWidth: 5,
@@ -16,20 +14,35 @@ function drawCenter() {
     });
 }
 
-function resizeCanvas() {
-    var canvas = document.getElementById('myCanvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - $('#header').height();
-    drawCenter();
-    drawCircle($('#myCanvas').width() / 2, $('#myCanvas').height() / 2);
-}
-window.addEventListener('resize', resizeCanvas, false);
-resizeCanvas();
+
+$(document).ready(function () {
+    //Get the canvas & context
+    var c = $('#myCanvas');
+    var ct = c.get(0).getContext('2d');
+    var container = $(c).parent();
+
+    //Run function when browser resizes
+    $(window).resize(respondCanvas);
+
+    function respondCanvas() {
+        c.attr('width', $(container).width()); //max width
+        c.attr('height', $(container).height()); //max except for header
+        drawCenter();
+        drawCircle($('#myCanvas').width() / 2, $('#myCanvas').height() / 2);
+        //Call a function to redraw other content (texts, images etc)
+        totalX = $('#myCanvas').width();
+        totalY = $('#myCanvas').height();
+    }
+
+    //Initial call
+    respondCanvas();
+
+});
 
 
 function drawCircle(x, y) {
+    $('#myCanvas').clearCanvas();
     drawCenter();
-
     $('#myCanvas').drawArc(
         {
             strokeStyle: '#000',
@@ -44,14 +57,12 @@ function drawCircle(x, y) {
 
 drawCircle($('#myCanvas').width() / 2, $('#myCanvas').height() / 2);
 
-var totalX = $('#myCanvas').width();
-var totalY = $('#myCanvas').height();
 
 leftWheel = 0;
 rightWheel = 0;
 
-var previousLeft = -1000;
-var previousRight = -1000;
+var previousLeft = {};
+var previousRight = {};
 
 
 function httpGet() {
@@ -63,11 +74,11 @@ function httpGet() {
 
     var seconds = new Date().getTime() / 1000;
     baseURL = "https://api.spark.io/v1/devices/" + window.deviceid + "/setMotors"
-    var toSend = 'access_token=' + window.accesstoken + '&params=' + L + ',' + R
+    var toSend = 'access_token=' + window.accesstoken + '&params=' + L.direction + L.power + ',' + R.direction + R.power;
     if (window.enablesend) {
 
-        console.log(seconds + " Sending:");
-        console.log(baseURL + " | POST | " + toSend);
+        console.warn(seconds + " Sending:");
+        console.warn(baseURL + " | POST | " + toSend);
 
         var xmlHttp = new XMLHttpRequest();
 
@@ -84,8 +95,8 @@ function httpGet() {
 
     }
     else {
-        console.log(seconds + " API Send Disabled, would have sent:");
-        console.log(baseURL + " | POST | " + toSend);
+        console.warn(seconds + " API Send Disabled, would have sent:");
+        console.warn(baseURL + " | POST | " + toSend);
 
     }
     return 0;
@@ -133,63 +144,110 @@ function adjustWheel(cur, toAdd) {
 
 function handleMove(e) {
     e.preventDefault();
-    var curX = e.touches[0].screenX;
-    var curY = e.touches[0].screenY - $('#header').height();
+
+
+    var curX = e.touches[0].clientX;
+    var curY = e.touches[0].clientY;
 
 
     //Redraw the circle every time the mouse moves
     drawCircle(curX, curY);
 
 
-    percentForward = calcMotorMagnitude(curY, totalY);
+    var percentForward = calcMotorMagnitude(curY, totalY);
+    var midPoint = totalX / 2;
 
-    leftWheel = percentForward
-    rightWheel = percentForward
-
-    adjustment = calcMotorMagnitude(curX, totalX);
-
-    if (percentForward > 0) {
-        if (adjustment > 0) {
-            //postive value means left turn
-            leftWheel = adjustWheel(leftWheel, -adjustment);
-        }
-        else {
-            //must be making a right turn
-            rightWheel = adjustWheel(rightWheel, adjustment);
-        }
+    var turn = "none";
+    if (curX < midPoint) {
+        //We must be left of center, so we are wanting a left turn
+        turn = "left";
+    }
+    else if (curX > midPoint) {
+        //We must be right of center, so we are wanting a right turn
+        turn = "right";
     }
 
+    var forward = true;
     if (percentForward < 0) {
-        if (adjustment > 0) {
-            //postive value means left turn
-            leftWheel = adjustWheel(leftWheel, adjustment);
+        forward = false;
+    }
+
+
+    leftWheel = {
+        name: 'L',
+        direction: '+',
+        power: 0
+    };
+
+    rightWheel = {
+        name: 'R',
+        direction: '+',
+        power: 0
+    };
+    leftWheel.power = percentForward;
+    rightWheel.power = percentForward;
+
+    var travelPercent = Math.round(Math.min(Math.abs(percentForward), 100));
+    var turnPercent = Math.round(Math.min(Math.abs((midPoint - curX) / midPoint) * 100, 100));
+
+    if (forward) {
+        leftWheel.direction = '+';
+        rightWheel.direction = '+';
+        if (turn == "left") {
+
+            //in order to turn left while going forward we need to reduce the speed of the left wheel.
+            var LadjustmentVal = Math.round(turnPercent * .5);
+            //dont adjust by more than 50% of the requested turn rate
+            leftWheel.power = Math.max(10, travelPercent - LadjustmentVal);
+            //do the adjustment, but make sure it doesn't go below zero.
+
+
         }
-        else {
-            //must be making a right turn
-            rightWheel = adjustWheel(rightWheel, -adjustment);
+        if (turn == "right") {
+
+            //in order to turn right while going forward we need to reduce the speed of the right wheel.
+            var RadjustmentVal = Math.round(turnPercent * .5);
+            //dont adjust by more than 50% of the requested turn rate
+            rightWheel.power = Math.max(10, travelPercent - RadjustmentVal);
+            //do the adjustment, but make sure it doesn't go below zero.
+
+
+        }
+
+    }
+    else {
+        leftWheel.direction = '-';
+        rightWheel.direction = '-';
+        if (turn == "left") {
+            //in order to turn left while going back we need to reduce the speed of the left wheel.
+            var LadjustmentVal = Math.round(turnPercent * .5);
+            //dont adjust by more than 50% of the requested turn rate
+            leftWheel.power = Math.max(10, travelPercent - LadjustmentVal);
+            //do the adjustment, but make sure it doesn't go below zero.
+        }
+        if (turn == "right") {
+            //in order to turn right while going forward we need to reduce the speed of the right wheel.
+            var RadjustmentVal = Math.round(turnPercent * .5);
+            //dont adjust by more than 50% of the requested turn rate
+            rightWheel.power = Math.max(10, travelPercent - RadjustmentVal);
+            //do the adjustment, but make sure it doesn't go below zero.
         }
     }
 
 
-    leftWheel = badRound(leftWheel);
-    rightWheel = badRound(rightWheel);
+    leftWheel.power = Math.abs(badRound(leftWheel.power));
+    rightWheel.power = Math.abs(badRound(rightWheel.power));
 
-//    console.log("Final wheel power values:")
-//    console.log("Left:" + leftWheel)
-//    console.log("Right:" + rightWheel)
 
+    //console.log(JSON.stringify(leftWheel) + "," + JSON.stringify(rightWheel));
 
     if (previousLeft != leftWheel || previousRight != rightWheel) {
         previousLeft = leftWheel;
         previousRight = rightWheel;
-
+        $('#lValue').text(leftWheel.direction + leftWheel.power);
+        $('#rValue').text(rightWheel.direction + rightWheel.power);
         //console.log("L: " + leftWheel + " R: " + rightWheel);
         throttledGet();
-
-        //update the HTML to see the current values
-        $('#lValue').text(leftWheel);
-        $('#rValue').text(rightWheel);
-
     }
 
 
