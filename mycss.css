@@ -2,16 +2,19 @@
     overflow: hidden;
 }
 
-#myCanvas {
+.holder {
     position: absolute;
-    top: 0px;
+    top: 85px;
     left: 0px;
+    right: 0px;
+    bottom: 85px;
     overflow: hidden
 }
 
 html, body {
     height: 100%; /* to keep .footer on bottom */
     margin: 0; /* to get rid of scroll bar, because (100% + default margin = scroll) */
+    background-color: grey;
 
 }
 
@@ -54,6 +57,17 @@ html, body {
     padding-bottom: 1px;
 }
 
+.bottom {
+    position: absolute;
+    text-align: center;
+    background-color: black;
+    bottom: 0px;
+    color: white;
+    height: 84px;
+    width: 100%;
+    padding-bottom: 1px;
+}
+
 .checkboxtop {
     position: relative;
     top: 25px;
@@ -69,6 +83,14 @@ html, body {
     border-width: 0 8px 8px 8px;
 }
 
-.h1 {
+.h4 {
     font-family: 'Audiowide', cursive;
+    font-size: 3.1em;
+    color: red;
+}
+
+.bigbutton {
+    padding-top: 10px;
+    width: 20%;
+    height: 60px;
 }

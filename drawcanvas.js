@@ -2,36 +2,82 @@
  * Created by mcowger on 1/20/14.
  */
 
+canvas = document.getElementById('myCanvas');
+function correctCoordinates(x, y, Loffset, Toffset) {
+    var coord = {};
+    coord.x = x - Loffset;
+    coord.y = Math.min(Math.max(0, y - Toffset), canvas.height);
+    //console.log("Corrected X,Y to X,Y:" + x + "," + y + "  ->  " + coord.x + "," + coord.y + " Canvas Height: " + canvas.height);
 
-function drawCenter() {
+    return coord;
 
-    $('#myCanvas').drawArc({
-        strokeStyle: '#000',
-        strokeWidth: 5,
-        fillStyle: 'green',
-        x: $('#myCanvas').width() / 2, y: $('#myCanvas').height() / 2,
-        radius: $('#myCanvas').height() * .04
-    });
 }
 
 
+function startDrive() {
+    window.enablesend = !window.enablesend;
+    if (window.enablesend) {
+        $('#titletext').css('color', 'green');
+    }
+    else {
+        $('#titletext').css('color', 'red')
+    }
+
+    console.log("Driving Enabled?:" + window.enablesend);
+}
+
+function drawCenter() {
+
+    var context = canvas.getContext('2d');
+    var centerX = canvas.width / 2;
+    var centerY = canvas.height / 2;
+    var radius = canvas.width * .08;
+    context.beginPath();
+    context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+    context.fillStyle = 'green';
+    context.fill();
+    context.lineWidth = 5;
+    context.strokeStyle = '#003300';
+    context.stroke();
+
+}
+
+function drawCircle(x, y) {
+    var context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    drawCenter();
+
+
+    var centerX = x;
+    var centerY = y;
+    var radius = canvas.width * .05;
+
+    context.beginPath();
+    context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+    context.fillStyle = 'red';
+    context.fill();
+    context.lineWidth = 5;
+    context.strokeStyle = '#003300';
+    context.stroke();
+}
+
 $(document).ready(function () {
-    //Get the canvas & context
-    var c = $('#myCanvas');
-    var ct = c.get(0).getContext('2d');
-    var container = $(c).parent();
+
+
+
 
     //Run function when browser resizes
     $(window).resize(respondCanvas);
 
     function respondCanvas() {
-        c.attr('width', $(container).width()); //max width
-        c.attr('height', $(container).height()); //max except for header
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+
         drawCenter();
-        drawCircle($('#myCanvas').width() / 2, $('#myCanvas').height() / 2);
+        drawCircle(canvas.width / 2, (canvas.height / 2));
         //Call a function to redraw other content (texts, images etc)
-        totalX = $('#myCanvas').width();
-        totalY = $('#myCanvas').height();
+        totalX = canvas.width;
+        totalY = canvas.height;
     }
 
     //Initial call
@@ -40,22 +86,7 @@ $(document).ready(function () {
 });
 
 
-function drawCircle(x, y) {
-    $('#myCanvas').clearCanvas();
-    drawCenter();
-    $('#myCanvas').drawArc(
-        {
-            strokeStyle: '#000',
-            strokeWidth: 5,
-            fillStyle: 'red',
-            x: x, y: y,
-            radius: $('#myCanvas').height() * .02,
-        }
-    );
-}
-
-
-drawCircle($('#myCanvas').width() / 2, $('#myCanvas').height() / 2);
+drawCircle(canvas.width / 2, canvas.height / 2);
 
 
 leftWheel = 0;
@@ -87,8 +118,9 @@ function httpGet() {
         xmlHttp.timeout = 5000; //5 second timeout
         xmlHttp.onreadystatechange = function () {
             if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-                console.log(xmlHttp.responseText);
+
             }
+            console.log(JSON.parse(xmlHttp.responseText).error_description);
         }
         xmlHttp.send(toSend);
 
@@ -104,6 +136,7 @@ function httpGet() {
 
 
 var throttledGet = $.throttle(1000, httpGet);  //dont call more than 1x/sec
+var debouncedStartDrive = $.debounce(250, startDrive);  //dont call more than 1x/sec
 
 
 function badRound(value) {
@@ -146,8 +179,15 @@ function handleMove(e) {
     e.preventDefault();
 
 
-    var curX = e.touches[0].clientX;
-    var curY = e.touches[0].clientY;
+    //First lets check if this was a double tap
+    if (e.touches.length > 1) {
+
+        debouncedStartDrive();
+    }
+
+    coords = correctCoordinates(e.touches[0].pageX, e.touches[0].pageY, 0, 85);
+    var curX = coords.x;
+    var curY = coords.y;
 
 
     //Redraw the circle every time the mouse moves
