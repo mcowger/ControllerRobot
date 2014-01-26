@@ -26,11 +26,12 @@ function startDrive() {
     console.log("Driving Enabled?:" + window.enablesend);
 }
 
+
 function drawCenter() {
 
     var context = canvas.getContext('2d');
     var centerX = canvas.width / 2;
-    var centerY = canvas.height / 2;
+    var centerY = canvas.height - 20;
     var radius = canvas.width * .08;
     context.beginPath();
     context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
@@ -74,7 +75,7 @@ $(document).ready(function () {
         canvas.height = canvas.parentElement.offsetHeight;
 
         drawCenter();
-        drawCircle(canvas.width / 2, (canvas.height / 2));
+        drawCircle(canvas.width / 2, canvas.height - 20);
         //Call a function to redraw other content (texts, images etc)
         totalX = canvas.width;
         totalY = canvas.height;
@@ -86,11 +87,11 @@ $(document).ready(function () {
 });
 
 
-drawCircle(canvas.width / 2, canvas.height / 2);
+drawCircle(canvas.width / 2, canvas.height);
 
 
-leftWheel = 0;
-rightWheel = 0;
+leftWheel = {};
+rightWheel = {};
 
 var previousLeft = {};
 var previousRight = {};
@@ -105,7 +106,10 @@ function httpGet() {
 
     var seconds = new Date().getTime() / 1000;
     baseURL = "https://api.spark.io/v1/devices/" + window.deviceid + "/setMotors"
-    var toSend = 'access_token=' + window.accesstoken + '&params=' + L.direction + L.power + ',' + R.direction + R.power;
+
+
+    var toSend = 'access_token=' + window.accesstoken + '&params=' + L.power + ',' + R.power;
+
     if (window.enablesend) {
 
         console.warn(seconds + " Sending:");
@@ -120,7 +124,7 @@ function httpGet() {
             if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
 
             }
-            console.log(JSON.parse(xmlHttp.responseText).error_description);
+            console.log(xmlHttp.responseText);
         }
         xmlHttp.send(toSend);
 
@@ -134,6 +138,14 @@ function httpGet() {
     return 0;
 }
 
+function stop() {
+    drawCircle(totalX / 2, totalY - 20);
+    leftWheel.power = 0;
+    rightWheel.power = 0;
+    $('#lValue').text(leftWheel.power);
+    $('#rValue').text(rightWheel.power);
+    httpGet();
+}
 
 var throttledGet = $.throttle(1000, httpGet);  //dont call more than 1x/sec
 var debouncedStartDrive = $.debounce(250, startDrive);  //dont call more than 1x/sec
@@ -145,21 +157,7 @@ function badRound(value) {
     return Math.round(value / 10) * 10;
 }
 function calcMotorMagnitude(curVal, maxVal) {
-    var midPoint = maxVal / 2;
-    var totalDifference = Math.abs(midPoint - curVal);
-    var revslashright = false;
-    if (curVal <= midPoint) {
-        revslashright = false;
-    } else {
-        revslashright = true;
-    }
-
-    var percent = (totalDifference / midPoint) * 100;
-    if (revslashright == true) {
-        percent = percent * -1;
-    }
-    return percent;
-
+    return ((maxVal - curVal) / maxVal) * 100;
 };
 
 function adjustWheel(cur, toAdd) {
@@ -178,12 +176,6 @@ function adjustWheel(cur, toAdd) {
 function handleMove(e) {
     e.preventDefault();
 
-
-    //First lets check if this was a double tap
-    if (e.touches.length > 1) {
-
-        debouncedStartDrive();
-    }
 
     coords = correctCoordinates(e.touches[0].pageX, e.touches[0].pageY, 0, 85);
     var curX = coords.x;
@@ -207,71 +199,43 @@ function handleMove(e) {
         turn = "right";
     }
 
-    var forward = true;
-    if (percentForward < 0) {
-        forward = false;
-    }
-
 
     leftWheel = {
         name: 'L',
-        direction: '+',
         power: 0
     };
 
     rightWheel = {
         name: 'R',
-        direction: '+',
         power: 0
     };
+
     leftWheel.power = percentForward;
     rightWheel.power = percentForward;
 
     var travelPercent = Math.round(Math.min(Math.abs(percentForward), 100));
     var turnPercent = Math.round(Math.min(Math.abs((midPoint - curX) / midPoint) * 100, 100));
 
-    if (forward) {
-        leftWheel.direction = '+';
-        rightWheel.direction = '+';
-        if (turn == "left") {
 
-            //in order to turn left while going forward we need to reduce the speed of the left wheel.
-            var LadjustmentVal = Math.round(turnPercent * .5);
-            //dont adjust by more than 50% of the requested turn rate
-            leftWheel.power = Math.max(10, travelPercent - LadjustmentVal);
-            //do the adjustment, but make sure it doesn't go below zero.
+    if (turn == "left") {
 
+        //in order to turn left while going forward we need to reduce the speed of the left wheel.
+        var LadjustmentVal = Math.round(turnPercent * .5);
+        //dont adjust by more than 50% of the requested turn rate
+        leftWheel.power = Math.max(10, travelPercent - LadjustmentVal);
+        //do the adjustment, but make sure it doesn't go below zero.
 
-        }
-        if (turn == "right") {
-
-            //in order to turn right while going forward we need to reduce the speed of the right wheel.
-            var RadjustmentVal = Math.round(turnPercent * .5);
-            //dont adjust by more than 50% of the requested turn rate
-            rightWheel.power = Math.max(10, travelPercent - RadjustmentVal);
-            //do the adjustment, but make sure it doesn't go below zero.
-
-
-        }
 
     }
-    else {
-        leftWheel.direction = '-';
-        rightWheel.direction = '-';
-        if (turn == "left") {
-            //in order to turn left while going back we need to reduce the speed of the left wheel.
-            var LadjustmentVal = Math.round(turnPercent * .5);
-            //dont adjust by more than 50% of the requested turn rate
-            leftWheel.power = Math.max(10, travelPercent - LadjustmentVal);
-            //do the adjustment, but make sure it doesn't go below zero.
-        }
-        if (turn == "right") {
-            //in order to turn right while going forward we need to reduce the speed of the right wheel.
-            var RadjustmentVal = Math.round(turnPercent * .5);
-            //dont adjust by more than 50% of the requested turn rate
-            rightWheel.power = Math.max(10, travelPercent - RadjustmentVal);
-            //do the adjustment, but make sure it doesn't go below zero.
-        }
+    if (turn == "right") {
+
+        //in order to turn right while going forward we need to reduce the speed of the right wheel.
+        var RadjustmentVal = Math.round(turnPercent * .5);
+        //dont adjust by more than 50% of the requested turn rate
+        rightWheel.power = Math.max(10, travelPercent - RadjustmentVal);
+        //do the adjustment, but make sure it doesn't go below zero.
+
+
     }
 
 
@@ -284,8 +248,8 @@ function handleMove(e) {
     if (previousLeft != leftWheel || previousRight != rightWheel) {
         previousLeft = leftWheel;
         previousRight = rightWheel;
-        $('#lValue').text(leftWheel.direction + leftWheel.power);
-        $('#rValue').text(rightWheel.direction + rightWheel.power);
+        $('#lValue').text(leftWheel.power);
+        $('#rValue').text(rightWheel.power);
         //console.log("L: " + leftWheel + " R: " + rightWheel);
         throttledGet();
     }

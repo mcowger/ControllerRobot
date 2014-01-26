@@ -42,17 +42,13 @@
 
 int M1 = D3;
 int M2 = D4;
-
 int E1 = D1;
 int E2 = A7;
-
 int led = D7;
-
-int setMotors(String command);
-
 int version = 6;
-
+int setMotors(String command);
 int splitString(String s, int index);
+
 
 int splitString(String s, int index) {
     
@@ -65,39 +61,10 @@ int splitString(String s, int index) {
 
 }
 
-
-
-
-/* This function is called once at start up ----------------------------------*/
-void setup()
-{
-
-	//Register all the  functions
-	Spark.function("setMotors", setMotors);
-	Spark.variable("version", &version, INT);
-
-  pinMode(led,OUTPUT);
-  pinMode(M1,OUTPUT);
-  pinMode(M2,OUTPUT);
-
-  pinMode(E1,OUTPUT);
-  pinMode(E2,OUTPUT);
-}
-
-/* This function loops forever --------------------------------------------*/
-void loop()
-{
-
-    
-
-}
-
-
-
 int setMotors(String command)
 {
-    int Lin = constrain(splitString(command,0),-100,100);
-    int Rin = constrain(splitString(command,1),-100,100);
+    int Lin = constrain(splitString(command,0),0,100);
+    int Rin = constrain(splitString(command,1),0,100);
     
     if (Lin == 0) {
       //Our input for the left motor was 0, so lets set E1 to low and M1 to 'any voltage' to disable the motor as per the truth table
@@ -111,9 +78,8 @@ int setMotors(String command)
       digitalWrite(M2,HIGH);
       //return -2;
     }
-    
     if (Lin > 0) {
-      Lin = constrain(Lin,30,100);
+      Lin = constrain(Lin,20,100);
       //Our input for the left motor was > 0, so we want to not reverse this motor.  We need to set M1 to 'any voltage' and PWM to E1
       //First set M1 to HIGH:
       digitalWrite(M1,HIGH);
@@ -123,10 +89,9 @@ int setMotors(String command)
       analogWrite(E1,Lpow);
       //return Lpow;
 
-    }    
-    
+    }
     if (Rin > 0) {
-      Rin = constrain(Rin,30,100);
+      Rin = constrain(Rin,20,100);
       //Our input for the left motor was > 0, so we want to not reverse this motor.  We need to set M1 to 'any voltage' and PWM to E1
       //First set M1 to HIGH:
       digitalWrite(M2,HIGH);
@@ -135,9 +100,28 @@ int setMotors(String command)
       //Now lets actually write that to the motor
       analogWrite(E2,Rpow);
       //return Rpow;
-
     }
-
-    // return -5;
+    
+    return -5;
     
 }
+
+
+/* This function is called once at start up ----------------------------------*/
+void setup()
+{
+    //Register all the  functions
+    Spark.function("setMotors", setMotors);
+    Spark.variable("version", &version, INT);
+    
+    pinMode(led,OUTPUT);
+    pinMode(M1,OUTPUT);
+    pinMode(M2,OUTPUT);
+    
+    pinMode(E1,OUTPUT);
+    pinMode(E2,OUTPUT);
+}
+
+/* This function loops forever --------------------------------------------*/
+void loop() {}
+
